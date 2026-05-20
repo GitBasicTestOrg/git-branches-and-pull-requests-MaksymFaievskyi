@@ -1,0 +1,50 @@
+name: Autograding Tests
+'on':
+- push
+- repository_dispatch
+permissions:
+  checks: write
+  actions: read
+  contents: read
+jobs:
+  run-autograding-tests:
+    runs-on: ubuntu-latest
+    if: github.actor != 'github-classroom[bot]'
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    - name: commit check2
+      id: commit-check2
+      uses: classroom-resources/autograding-command-grader@v1
+      with:
+        test-name: commit check2
+        setup-command: ''
+        command: git log --oneline | grep feature
+        timeout: 1
+        max-score: 4
+    - name: file exists
+      id: file-exists
+      uses: classroom-resources/autograding-command-grader@v1
+      with:
+        test-name: file exists
+        setup-command: ''
+        command: test -f feature.txt
+        timeout: 1
+        max-score: 5
+    - name: commit check
+      id: commit-check
+      uses: classroom-resources/autograding-command-grader@v1
+      with:
+        test-name: commit check
+        setup-command: ''
+        command: git log --oneline | grep feature
+        timeout: 1
+        max-score: 5
+    - name: Autograding Reporter
+      uses: classroom-resources/autograding-grading-reporter@v1
+      env:
+        COMMIT-CHECK2_RESULTS: "${{steps.commit-check2.outputs.result}}"
+        FILE-EXISTS_RESULTS: "${{steps.file-exists.outputs.result}}"
+        COMMIT-CHECK_RESULTS: "${{steps.commit-check.outputs.result}}"
+      with:
+        runners: commit-check2,file-exists,commit-check
